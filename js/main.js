@@ -12,10 +12,26 @@ document.body.appendChild(renderer.view);
 var texture = PIXI.Texture.fromImage('img/smiley.png');
 var player = new PIXI.Sprite(texture);
 
+function Point(x,y) {
+    this.x = x;
+    this.y = y;
+}
+
+Point.prototype.vectorTo = function(end)
+{
+    return new Point(end.x - this.x, end.y - this.y);
+};
+
+Point.prototype.lengthSq = function()
+{
+    return this.x * this.x + this.y * this.y;
+};
+
 // rotate around center
 player.anchor.x = 0.5;
 player.anchor.y = 0.5;
 
+player.goal = new Point(WIDTH/2, HEIGHT/2);
 
 
 // center in stage
@@ -41,14 +57,22 @@ kd.RIGHT.down(
 
 mystage.mousedown = function(e)
 {
-    player.position.x = e.global.x;
-    player.position.y = e.global.y;
+    player.goal.x = e.global.x;
+    player.goal.y = e.global.y;
 };
 
 function gameLoop() {
     requestAnimFrame(gameLoop);
     renderer.render(mystage);
+
+    var goalVec = new Point(player.position.x, player.position.y).vectorTo(player.goal);
+    var goalDist = Math.sqrt(goalVec.lengthSq());
+    if ( goalDist > 0 )
+    {
+        player.position.x += goalVec.x / goalDist;
+        player.position.y += goalVec.y / goalDist;
+    }
     kd.tick();
-};
+}
 
 requestAnimFrame(gameLoop);
